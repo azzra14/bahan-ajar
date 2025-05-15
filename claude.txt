@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electron Configurator</title>
+    <style>
+        :root {
+            --s-color: #FF6B6B;
+            --p-color: #4ECDC4;
+            --d-color: #FFD166;
+            --f-color: #9B5DE5;
+            --electron-color: #2274A5;
+            --electron-spin-up: #2274A5;
+            --electron-spin-down: #D64933;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .game-container {
+            display: flex;
+            flex-wrap: wrap;
+            flex: 1;
+            padding: 1rem;
+            gap: 1rem;
+        }
+        
+        .panel {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+        }
+        
+        .electrons-panel {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .electron-pool {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background-color: #eee;
+            border-radius: 8px;
+            min-height: 150px;
+            width: 100%;
+        }
+        
+        .electron {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--electron-color);
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            transition: transform 0.2s;
+            user-select: none;
+        }
+
+        .electron.spin-up {
+            background-color: var(--electron-spin-up);
+        }
+
+        .electron.spin-down {
+            background-color: var(--electron-spin-down);
+        }
+        
+        .electron:hover {
+            transform: scale(1.1);
+        }
+        
+        .electron:active {
+            cursor: grabbing;
+        }
+        
+        .orbital-panel {
+            flex: 3;
+            min-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .energy-ladder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .ladder-img {
+            max-width: 300px;
+            height: auto;
+        }
+        
+        .orbitals-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        
+        .orbital-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .orbital-label {
+            width: 40px;
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .orbital-slots {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .orbital {
+            width: 60px;
+            height: 30px;
+            border-radius: 15px;
+            border: 2px solid #ccc;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        
+        .orbital.s-orbital {
+            border-color: var(--s-color);
+            background-color: rgba(255, 107, 107, 0.1);
+        }
+        
+        .orbital.p-orbital {
+            border-color: var(--p-color);
+            background-color: rgba(78, 205, 196, 0.1);
+        }
+        
+        .orbital.d-orbital {
+            border-color: var(--d-color);
+            background-color: rgba(255, 209, 102, 0.1);
+        }
+        
+        .orbital.f-orbital {
+            border-color: var(--f-color);
+            background-color: rgba(155, 93, 229, 0.1);
+        }
+        
+        .orbital.highlight {
+            box-shadow: 0 0 10px rgba(255, 255, 0, 0.7);
+        }
+        
+        .orbital-slot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px dashed #999;
+            background-color: transparent;
+        }
+
+        .orbital-slot.filled {
+            border: none;
+        }
+        
+        .orbital-slot.filled.spin-up {
+            background-color: var(--electron-spin-up);
+        }
+
+        .orbital-slot.filled.spin-down {
+            background-color: var(--electron-spin-down);
+        }
+        
+        .info-panel {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .element-info {
+            background-color: #eee;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .element-symbol {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .element-name {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .element-number {
+            font-size: 1rem;
+            color: #666;
+        }
+        
+        .score-display {
+            background-color: #eee;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .timer-display {
+            background-color: #eee;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        button {
+            padding: 0.8rem;
+            border: none;
+            border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        #hint-btn {
+            background-color: #2196F3;
+        }
+        
+        #hint-btn:hover {
+            background-color: #0b7dda;
+        }
+        
+        #help-btn {
+            background-color: #ff9800;
+        }
+        
+        #help-btn:hover {
+            background-color: #e68a00;
+        }
+        
+        #next-btn {
+            background-color: #9c27b0;
+        }
+        
+        #next-btn:hover {
+            background-color: #7b1fa2;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .close-btn {
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .feedback-message {
+            background-color: #4CAF50;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .feedback-message.error {
+            background-color: #f44336;
+        }
+        
+        .feedback-message.visible {
+            opacity: 1;
+        }
+
+        @media (max-width: 1200px) {
+            .game-container {
+                flex-direction: column;
+            }
+            
+            .electrons-panel, .orbital-panel, .info-panel {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Electron Configurator</h1>
+        <p>Drag and drop electrons to their correct orbital positions</p>
+    </div>
+    
+    <div class="game-container">
+        <div class="panel electrons-panel">
+            <h2>Electron Pool</h2>
+            <div class="electron-pool" id="electron-pool"></div>
+        </div>
+        
+        <div class="panel orbital-panel">
+            <div class="energy-ladder">
+                <svg width="300" height="200" viewBox="0 0 300 200">
+                    <text x="10" y="20" font-size="10">Energy Level</text>
+                    <line x1="50" y1="20" x2="50" y2="180" stroke="black" stroke-width="2"/>
+                    <line x1="45" y1="20" x2="55" y2="20" stroke="black" stroke-width="2"/>
+                    <line x1="45" y1="180" x2="55" y2="180" stroke="black" stroke-width="2"/>
+                    
+                    <line x1="50" y1="170" x2="80" y2="170" stroke="#FF6B6B" stroke-width="2"/>
+                    <text x="85" y="175" font-size="12" fill="#FF6B6B">1s</text>
+                    
+                    <line x1="50" y1="150" x2="90" y2="150" stroke="#FF6B6B" stroke-width="2"/>
+                    <text x="95" y="155" font-size="12" fill="#FF6B6B">2s</text>
+                    
+                    <line x1="50" y1="140" x2="110" y2="140" stroke="#4ECDC4" stroke-width="2"/>
+                    <text x="115" y="145" font-size="12" fill="#4ECDC4">2p</text>
+                    
+                    <line x1="50" y1="120" x2="130" y2="120" stroke="#FF6B6B" stroke-width="2"/>
+                    <text x="135" y="125" font-size="12" fill="#FF6B6B">3s</text>
+                    
+                    <line x1="50" y1="110" x2="150" y2="110" stroke="#4ECDC4" stroke-width="2"/>
+                    <text x="155" y="115" font-size="12" fill="#4ECDC4">3p</text>
+                    
+                    <line x1="50" y1="90" x2="170" y2="90" stroke="#FF6B6B" stroke-width="2"/>
+                    <text x="175" y="95" font-size="12" fill="#FF6B6B">4s</text>
+                    
+                    <line x1="50" y1="80" x2="190" y2="80" stroke="#FFD166" stroke-width="2"/>
+                    <text x="195" y="85" font-size="12" fill="#FFD166">3d</text>
+                    
+                    <line x1="50" y1="70" x2="210" y2="70" stroke="#4ECDC4" stroke-width="2"/>
+                    <text x="215" y="75" font-size="12" fill="#4ECDC4">4p</text>
+                    
+                    <text x="50" y="190" font-size="10">Lower Energy</text>
+                    <text x="50" y="15" font-size="10">Higher Energy</text>
+                </svg>
+            </div>
+            
+            <div class="orbitals-container" id="orbitals-container">
+                <!-- Orbitals will be generated by JavaScript -->
+            </div>
+            
+            <div class="feedback-message" id="feedback">
+                Correct placement!
+            </div>
+        </div>
+        
+        <div class="panel info-panel">
+            <div class="element-info">
+                <div class="element-symbol" id="element-symbol">?</div>
+                <div class="element-name" id="element-name">Loading...</div>
+                <div class="element-number" id="element-number"></div>
+            </div>
+            
+            <div class="timer-display" id="timer">
+                00:00
+            </div>
+            
+            <div class="score-display">
+                <h3>Score</h3>
+                <p id="score">0</p>
+            </div>
+            
+            <div class="buttons">
+                <button id="hint-btn">Show Hint</button>
+                <button id="help-btn">Help</button>
+                <button id="next-btn" disabled>Next Element</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Help Modal -->
+    <div class="modal" id="help-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>How to Play</h2>
+                <span class="close-btn" id="close-help">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h3>Rules for Electron Configuration</h3>
+                <ul>
+                    <li><strong>Aufbau Principle:</strong> Fill orbitals from lowest energy to highest energy (1s → 2s → 2p → 3s, etc.)</li>
+                    <li><strong>Hund's Rule:</strong> When filling orbitals of equal energy, place one electron in each orbital before pairing them</li>
+                    <li><strong>Pauli Exclusion Principle:</strong> Maximum of 2 electrons per orbital, with opposite spins</li>
+                </ul>
+                
+                <h3>Orbital Capacities:</h3>
+                <ul>
+                    <li>s orbital: 2 electrons (1 orbital × 2 electrons)</li>
+                    <li>p orbital: 6 electrons (3 orbitals × 2 electrons)</li>
+                    <li>d orbital: 10 electrons (5 orbitals × 2 electrons)</li>
+                    <li>f orbital: 14 electrons (7 orbitals × 2 electrons)</li>
+                </ul>
+                
+                <h3>How to Play:</h3>
+                <ol>
+                    <li>Drag electrons from the electron pool to the appropriate orbitals</li>
+                    <li>Follow the rules to correctly place all electrons</li>
+                    <li>Complete the configuration to move to the next element</li>
+                </ol>
+                
+                <h3>Controls:</h3>
+                <ul>
+                    <li><strong>Hint:</strong> Highlights the next correct orbital to fill</li>
+                    <li><strong>Next Element:</strong> Move to a new element after completing the current one</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Elements data
+        const elements = [
+            { number: 1, symbol: 'H', name: 'Hydrogen', electrons: 1 },
+            { number: 2, symbol: 'He', name: 'Helium', electrons: 2 },
+            { number: 3, symbol: 'Li', name: 'Lithium', electrons: 3 },
+            { number: 4, symbol: 'Be', name: 'Beryllium', electrons: 4 },
+            { number: 5, symbol: 'B', name: 'Boron', electrons: 5 },
+            { number: 6, symbol: 'C', name: 'Carbon', electrons: 6 },
+            { number: 7, symbol: 'N', name: 'Nitrogen', electrons: 7 },
+            { number: 8, symbol: 'O', name: 'Oxygen', electrons: 8 },
+            { number: 9, symbol: 'F', name: 'Fluorine', electrons: 9 },
+            { number: 10, symbol: 'Ne', name: 'Neon', electrons: 10 },
+            { number: 11, symbol: 'Na', name: 'Sodium', electrons: 11 },
+            { number: 12, symbol: 'Mg', name: 'Magnesium', electrons: 12 },
+            { number: 13, symbol: 'Al', name: 'Aluminum', electrons: 13 },
+            { number: 15, symbol: 'P', name: 'Phosphorus', electrons: 15 },
+            { number: 18, symbol: 'Ar', name: 'Argon', electrons: 18 }
+        ];
+
+        // Orbital structure definition
+        const orbitals = [
+            { name: '1s', type: 's', count: 1, capacity: 2 },
+            { name: '2s', type: 's', count: 1, capacity: 2 },
+            { name: '2p', type: 'p', count: 3, capacity: 2 },
+            { name: '3s', type: 's', count: 1, capacity: 2 },
+            { name: '3p', type: 'p', count: 3, capacity: 2 },
+            { name: '4s', type: 's', count: 1, capacity: 2 },
+            { name: '3d', type: 'd', count: 5, capacity: 2 },
+            { name: '4p', type: 'p', count: 3, capacity: 2 }
+        ];
+        
+        // Game state
+        let currentElement;
+        let score = 0;
+        let timer;
+        let seconds = 0;
+        let correctPlacements = 0;
+        let totalNeededPlacements = 0;
+        
+        // DOM elements
+        const electronPool = document.getElementById('electron-pool');
+        const orbitalsContainer = document.getElementById('orbitals-container');
+        const elementSymbol = document.getElementById('element-symbol');
+        const elementName = document.getElementById('element-name');
+        const elementNumber = document.getElementById('element-number');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const hintBtn = document.getElementById('hint-btn');
+        const helpBtn = document.getElementById('help-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const helpModal = document.getElementById('help-modal');
+        const closeHelp = document.getElementById('close-help');
+        const feedback = document.getElementById('feedback');
+        
+        // Initialize the game
+        function initGame() {
+            buildOrbitalStructure();
+            selectRandomElement();
+            startTimer();
+            
+            // Event listeners
+            hintBtn.addEventListener('click', showHint);
+            helpBtn.addEventListener('click', () => {
+                helpModal.style.display = 'flex';
+            });
+            closeHelp.addEventListener('click', () => {
+                helpModal.style.display = 'none';
+            });
+            nextBtn.addEventListener('click', selectRandomElement);
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (event) => {
+                if (event.target === helpModal) {
+                    helpModal.style.display = 'none';
+                }
+            });
+
+            // Drag and drop setup will be handled by setupDragAndDrop()
+        }
+        
+        // Build the orbital structure UI
+        function buildOrbitalStructure() {
+            orbitalsContainer.innerHTML = '';
+            
+            orbitals.forEach(orbital => {
+                const orbitalRow = document.createElement('div');
+                orbitalRow.className = 'orbital-row';
+                
+                const orbitalLabel = document.createElement('div');
+                orbitalLabel.className = 'orbital-label';
+                orbitalLabel.textContent = orbital.name;
+                orbitalRow.appendChild(orbitalLabel);
+                
+                const orbitalSlots = document.createElement('div');
+                orbitalSlots.className = 'orbital-slots';
+                
+                for (let i = 0; i < orbital.count; i++) {
+                    const orbitalElement = document.createElement('div');
+                    orbitalElement.className = `orbital ${orbital.type}-orbital`;
+                    orbitalElement.dataset.name = orbital.name;
+                    orbitalElement.dataset.index = i;
+                    
+                    // Create slots for electrons (2 per orbital)
+                    for (let j = 0; j < orbital.capacity; j++) {
+                        const slot = document.createElement('div');
+                        slot.className = 'orbital-slot';
+                        slot.dataset.spin = j === 0 ? 'up' : 'down';
+                        slot.dataset.filled = 'false';
+                        orbitalElement.appendChild(slot);
+                    }
+                    
+                    orbitalSlots.appendChild(orbitalElement);
+                }
+                
+                orbitalRow.appendChild(orbitalSlots);
+                orbitalsContainer.appendChild(orbitalRow);
+            });
+        }
+        
+        // Select a random element and set up the challenge
+        function selectRandomElement() {
+            // Reset UI
+            clearOrbitals();
+            nextBtn.disabled = true;
+            correctPlacements = 0;
+            
+            // Select random element
+            const randomIndex = Math.floor(Math.random() * elements.length);
+            currentElement = elements[randomIndex];
+            
+            // Update element info display
+            elementSymbol.textContent = currentElement.symbol;
+            elementName.textContent = currentElement.name;
+            elementNumber.textContent = `Atomic number: ${currentElement.number}`;
+            
+            // Set up electron pool
+            populateElectronPool(currentElement.electrons);
+            
+            // Reset timer
+            seconds = 0;
+            updateTimer();
+            
+            totalNeededPlacements = currentElement.electrons;
+            
+            // Set up drag and drop
+            setupDragAndDrop();
+        }
+        
+        // Populate the electron pool with the correct number of electrons
+        function populateElectronPool(count) {
+            electronPool.innerHTML = '';
+            
+            for (let i = 0; i < count; i++) {
+                const electron = document.createElement('div');
+                electron.className = 'electron';
+                electron.textContent = 'e-';
+                electron.draggable = true;
+                electron.dataset.id = i;
+                
+                electronPool.appendChild(electron);
+            }
+        }
+        
+        // Set up drag and drop functionality
+        function setupDragAndDrop() {
+            const electrons = document.querySelectorAll('.electron');
+            const slots = document.querySelectorAll('.orbital-slot');
+            
+            electrons.forEach(electron => {
+                electron.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', e.target.dataset.id);
+                    setTimeout(() => {
+                        e.target.classList.add('dragging');
+                    }, 0);
+                });
+                
+                electron.addEventListener('dragend', (e) => {
+                    e.target.classList.remove('dragging');
+                });
+            });
+            
+            slots.forEach(slot => {
+                slot.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    if (slot.dataset.filled === 'false' && isValidPlacement(slot)) {
+                        slot.style.backgroundColor = 'rgba(0, 255, 0, 0.2)';
+                    } else {
+                        slot.style.backgroundColor = 'rgba(255, 0, 0, 0.2)';
+                    }
+                });
+                
+                slot.addEventListener('dragleave', (e) => {
+                    slot.style.backgroundColor = '';
+                });
+                
+                slot.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const electronId = e.dataTransfer.getData('text/plain');
+                    const electron = document.querySelector(`.electron[data-id="${electronId}"]`);
+                    
+                    if (slot.dataset.filled === 'false' && isValidPlacement(slot)) {
+                        // Place electron in slot
+                        slot.dataset.filled = 'true';
+                        slot.classList.add('filled');
+                        if (slot.dataset.spin === 'up') {
+                            slot.classList.add('spin-up');
+                        } else {
+                            slot.classList.add('spin-down');
+                        }
+                        
+                        // Remove electron from pool
+                        electron.remove();
+                        
+                        // Update score
+                        score += 10;
+                        scoreDisplay.textContent = score;
+                        correctPlacements++;
+                        
+                        // Show feedback
+                        showFeedback('Correct placement!', false);
+                        
+                        // Check if configuration is complete
+                        if (correctPlacements === totalNeededPlacements) {
+                            // Configuration complete
+                            score += 50; // Bonus for completing
+                            scoreDisplay.textContent = score;
+                            nextBtn.disabled = false;
+                            showFeedback('Configuration complete! +50 bonus points', false);
+                        }
+                    } else {
+                        // Invalid placement
+                        showFeedback('Invalid placement! Follow Aufbau, Hund\'s, and Pauli principles', true);
+                    }
+                    
+                    slot.style.backgroundColor = '';
+                });
+            });
+        }
+        
+        // Check if the placement is valid according to the rules
+        function isValidPlacement(slot) {
+            const orbital = slot.parentElement;
+            const orbitalName = orbital.dataset.name;
+            const orbitalIndex = parseInt(orbital.dataset.index);
+            const spin = slot.dataset.spin;
+            
+            // Get all orbitals in the correct filling order
+            const allOrbitalElements = getOrbitalsInFillOrder();
+            const currentOrbitalIndex = allOrbitalElements.findIndex(o => 
+                o.dataset.name === orbitalName && parseInt(o.dataset.index) === orbitalIndex
+            );
+            
+            // Check Aufbau principle - must fill lower energy orbitals first
+            for (let i = 0; i < currentOrbitalIndex; i++) {
+                const prevOrbital = allOrbitalElements[i];
+                const slots = prevOrbital.querySelectorAll('.orbital-slot');
+                
+                // If any previous orbital has unfilled slots, this is invalid
+                for (const s of slots) {
+                    if (s.dataset.filled === 'false') {
+                        return false;
+                    }
+                }
+            }
+            
+            // Check Hund's rule - for the same subshell, all orbitals must have one electron before pairing
+            if (spin === 'down') {
+                // If this is a second electron (spin down), the spin up must be filled
+                const spinUpSlot = orbital.querySelector('.orbital-slot[data-spin="up"]');
+                if (spinUpSlot.dataset.filled === 'false') {
+                    return false;
+                }
+                
+                // Hund's rule is already checked at this point for spin down electrons
+            } else {
+                // For spin up electrons, check Hund's rule
+                // Find all orbitals of the same subshell
+                const orbitalType = orbitalName.charAt(1); // 's', 'p', 'd', or 'f'
+                const energyLevel = orbitalName.charAt(0); // '1', '2', etc.
+                const sameSubshellOrbitals = Array.from(
+                    document.querySelectorAll(`.orbital[data-name="${energyLevel}${orbitalType}"]`)
+                );
+                
+                // Check if all previous orbitals in the same subshell have at least one electron
+                for (let i = 0; i < orbitalIndex; i++) {
+                    const prevOrbital = sameSubshellOrbitals[i];
+                    const spinUpSlot = prevOrbital.querySelector('.orbital-slot[data-spin="up"]');
+                    
+                    if (spinUpSlot && spinUpSlot.dataset.filled === 'false') {
+                        return false;
+                    }
+                }
+                
+                // Check if any orbitals after this one in the same subshell have electrons (violates Hund's rule)
+                const hasElectronsAfter = sameSubshellOrbitals.slice(orbitalIndex + 1).some(o => {
+                    const slots = o.querySelectorAll('.orbital-slot');
+                    return Array.from(slots).some(s => s.dataset.filled === 'true');
+                });
+                
+                if (hasElectronsAfter) {
+                    return false;
+                }
+            }
+            
+            // If we got here, the placement is valid
+            return true;
+        }
+        
+        // Get orbitals in the correct filling order according to Aufbau principle
+        function getOrbitalsInFillOrder() {
+            const allOrbitals = document.querySelectorAll('.orbital');
+            
+            // Convert to array so we can sort
+            return Array.from(allOrbitals).sort((a, b) => {
+                const nameA = a.dataset.name;
+                const nameB = b.dataset.name;
+                
+                // Get the energy level and orbital type
+                const levelA = parseInt(nameA.charAt(0));
+                const levelB = parseInt(nameB.charAt(0));
+                const typeA = nameA.charAt(1);
+                const typeB = nameB.charAt(1);
+                
+                // Calculate a numerical value for the energy level (approximate aufbau order)
+                const energyValueA = calculateEnergyValue(levelA, typeA);
+                const energyValueB = calculateEnergyValue(levelB, typeB);
+                
+                if (energyValueA !== energyValueB) {
+                    return energyValueA - energyValueB;
+                }
+                </body>
+                </html>
